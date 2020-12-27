@@ -29,7 +29,6 @@ resource "aws_subnet" "private2" {
   }
 }
 
-}
 resource "aws_subnet" "public1" {
   vpc_id     = aws_vpc.prod.id
   cidr_block = var.subnetp1_cidr
@@ -50,7 +49,7 @@ resource "aws_subnet" "public2" {
     Tier = "public"
   }
 }
-}
+
 
 # Create Internet gateway, NAT gw + EIP, route tables and all associations
 resource "aws_internet_gateway" "gw" {
