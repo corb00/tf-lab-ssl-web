@@ -181,7 +181,7 @@ resource "aws_launch_configuration" "as_web" {
 		#!/bin/bash
     sudo apt update
     sudo apt install -y nginx
-    sudo ufw allow 'Nginx HTTP'
+    sudo ufw allow 'Nginx HTTPS'
     sudo systemctl enable nginx
     sudo systemctl start nginx 
 
@@ -256,10 +256,10 @@ resource "aws_lb" "public_web" {
 }
 
 #6.1 Create Listener - add Listener rule(s)
-resource "aws_lb_listener" "http" {
+resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.public_web.arn
-  port              = 80
-  protocol          = "HTTP"
+  port              = 443
+  protocol          = "HTTPS"
 
   # By default, return a simple 404 page
   default_action {
@@ -293,13 +293,13 @@ resource "aws_lb_target_group" "asg" {
 
   name = var.alb_name
 
-  port     = var.web_server_port
-  protocol = "HTTP"
+  port     = var.web_server_ssl_port
+  protocol = "HTTPS"
   vpc_id   = data.aws_vpc.prod.id
 
   health_check {
     path                = "/"
-    protocol            = "HTTP"
+    protocol            = "HTTPS"
     matcher             = "200"
     interval            = 15
     timeout             = 3
