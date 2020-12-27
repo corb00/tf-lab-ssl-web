@@ -28,15 +28,7 @@ resource "aws_subnet" "private2" {
     Tier = "private"
   }
 }
-resource "aws_subnet" "private3" {
-  vpc_id     = aws_vpc.prod.id
-  cidr_block = var.subnet3_cidr
-  availability_zone = var.subnet3_az
-  tags = {
-    Name = "subnet3.private"
-    AZ = var.subnet3_az
-    Tier = "private"
-  }
+
 }
 resource "aws_subnet" "public1" {
   vpc_id     = aws_vpc.prod.id
@@ -58,16 +50,8 @@ resource "aws_subnet" "public2" {
     Tier = "public"
   }
 }
-resource "aws_subnet" "public3" {
-  vpc_id     = aws_vpc.prod.id
-  cidr_block = var.subnetp3_cidr
-  availability_zone = var.subnet3_az
-  tags = {
-    Name = "subnet3.public"
-    AZ = var.subnet3_az
-    Tier = "public"
-  }
 }
+
 # Create Internet gateway, NAT gw + EIP, route tables and all associations
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.prod.id
@@ -124,10 +108,6 @@ resource "aws_route_table_association" "public2" {
   subnet_id      = aws_subnet.public2.id
   route_table_id = aws_route_table.public.id
 }
-resource "aws_route_table_association" "public3" {
-  subnet_id      = aws_subnet.public3.id
-  route_table_id = aws_route_table.public.id
-}
 
 resource "aws_route_table_association" "private1" {
   subnet_id      = aws_subnet.private1.id
@@ -137,39 +117,21 @@ resource "aws_route_table_association" "private2" {
   subnet_id      = aws_subnet.private2.id
   route_table_id = aws_route_table.private.id
 }
-resource "aws_route_table_association" "private3" {
-  subnet_id      = aws_subnet.private3.id
-  route_table_id = aws_route_table.private.id
-}
 
-#3  Create security groups to allow web traffic to servers, port 80 for ALB
+#3  Create security groups to allow secure traffic to servers from the ALB
 resource "aws_security_group" "web" {
   name        = "web"
-  description = "Allow web inbound traffic"
+  description = "Allow secure traffic from ALB"
   vpc_id      = aws_vpc.prod.id
 
   ingress {
-    description = "TLS from internet"
+    description = "TLS from alb"
     from_port   = var.web_server_ssl_port
     to_port     = var.web_server_ssl_port
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  ingress {
-    description = "web from internet"
-    from_port   = var.web_server_port
-    to_port     = var.web_server_port
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  # ingress {
-  #   description = "ssh from bastion"
-  #   from_port   = 22
-  #   to_port     = 22
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["108.29.90.182/32"]
-  # }
-
+  
   egress {
     from_port   = 0
     to_port     = 0
@@ -178,22 +140,28 @@ resource "aws_security_group" "web" {
   }
 
   tags = {
-    Name = "web_ssh_remote"
+    Name = "ssl_web"
   }
 }
-resource "aws_security_group" "alb" {
 
+resource "aws_security_group" "alb" {
   name = var.alb_security_group_name
   vpc_id      = aws_vpc.prod.id
    
-  # Allow inbound HTTP requests
+  # Allow inbound HTTP requests -> redirected by listener on ALB to use SSL
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+# Allow inbound HTTPS requests
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   # Allow all outbound requests
   egress {
     from_port   = 0
@@ -207,13 +175,7 @@ resource "aws_security_group" "alb" {
 resource "aws_launch_configuration" "as_web" {
   image_id      = var.amis[var.region]
   instance_type = "t2.micro"
-  # subnet_id = aws_subnet.public1.id
   key_name="tf-lab"
-  #network_interface {
-  #   device_index         = 0
-  #   network_interface_id = aws_network_interface.eni0.id
-  #}
-  
   security_groups = [aws_security_group.web.id]
 
   user_data = <<-EOF
