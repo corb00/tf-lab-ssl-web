@@ -50,7 +50,6 @@ resource "aws_subnet" "public2" {
   }
 }
 
-
 # Create Internet gateway, NAT gw + EIP, route tables and all associations
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.prod.id
@@ -243,7 +242,50 @@ data "aws_subnet_ids" "private" {
     aws_subnet.private1
   ]
 }
+
+data "aws_acm_certificate" "amazon_issued" {
+  domain      = "test.domain123.com"
+  types       = ["AMAZON_ISSUED"]
+  most_recent = true
+  depends_on = [
+    aws_acm_certificate.cert
+  ]
+
+}
+
+
 #-------------------------------------------------------------------
+
+# create Route53 entry, ACM ssl certificate for test.domain123.com
+
+resource "aws_route53_zone" "primary" {
+  name = "domain123.com"
+}
+
+resource "aws_route53_record" "web" {
+  zone_id = aws_route53_zone.primary.zone_id
+  name    = "test.domain123.com"
+  type    = "A"
+  alias {
+    name                   = aws_lb.public_web.dns_name
+    zone_id                = aws_lb.public_web.zone_id
+    evaluate_target_health = true
+  }
+}
+
+resource "aws_acm_certificate" "cert" {
+  domain_name       = "test.domain123.com"
+  validation_method = "DNS"
+
+  tags = {
+    Environment = "test"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 
 #6  Create ALB
 resource "aws_lb" "public_web" {
@@ -255,12 +297,33 @@ resource "aws_lb" "public_web" {
   security_groups    = [aws_security_group.alb.id]
 }
 
-#6.1 Create Listener - add Listener rule(s)
+
+
+#6.1 Create http listener for alb to redirect to https
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.public_web.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+
+
+#6.2 Create https Listener - add Listener rule(s)
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.public_web.arn
   port              = 443
   protocol          = "HTTPS"
-
+  certificate_arn = data.aws_acm_certificate.amazon_issued.arn
   # By default, return a simple 404 page
   default_action {
     type = "fixed-response"
@@ -310,7 +373,6 @@ resource "aws_lb_target_group" "asg" {
 
 
 #8 Outputs
-
 # output "server_public_ip" {
 #    value = aws_eip.public1_web1.public_ip
 # }
