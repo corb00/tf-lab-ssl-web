@@ -17,7 +17,6 @@ variable "subnet1_az" {
   type = string
   default = "us-west-2a"
 }
-
 variable "subnet2_cidr" {
   type = string
   default = "10.0.2.0/24"
@@ -26,16 +25,6 @@ variable "subnet2_az" {
   type = string
   default = "us-west-2b"
 }
-
-variable "subnet3_cidr" {
-  type = string
-  default = "10.0.3.0/24"
-}
-variable "subnet3_az" {
-  type = string
-  default = "us-west-2c"
-}
-
 variable "subnetp1_cidr" {
   type = string
   default = "10.0.4.0/24"
@@ -44,13 +33,6 @@ variable "subnetp2_cidr" {
   type = string
   default = "10.0.5.0/24"
 }
-variable "subnetp3_cidr" {
-  type = string
-  default = "10.0.6.0/24"
-}
-
-
-
 
 
 variable "amis" {
@@ -61,15 +43,23 @@ variable "amis" {
   }
 }
 
-variable "web_server_port" {
-  type = number
-  default = 80
-}
+# variable "web_server_port" {
+#   type = number
+#   default = 80
+# }
 
 variable "web_server_ssl_port" {
   type = number
   default = 443
 }
+
+
+variable "domain_name" {
+  description = "Domain name to be used for the website"
+  type        = string
+  default     = "corbit.cc"
+}
+
 
 variable "alb_name" {
   description = "The name of the ALB"

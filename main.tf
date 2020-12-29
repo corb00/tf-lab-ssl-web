@@ -256,15 +256,16 @@ data "aws_subnet_ids" "private" {
 
 #-------------------------------------------------------------------
 
-# create Route53 entry, ACM ssl certificate for test.domain123.com
+# create Route53 entry, create ACM ssl certificate for test.<domain_name>
+# --> validation of certificate
 
 resource "aws_route53_zone" "primary" {
-  name = "domain123.com"
+  name = var.domain_name
 }
 
 resource "aws_route53_record" "web" {
   zone_id = aws_route53_zone.primary.zone_id
-  name    = "test.domain123.com"
+  name    = "test.${var.domain_name}"
   type    = "A"
   alias {
     name                   = aws_lb.public_web.dns_name
@@ -274,7 +275,7 @@ resource "aws_route53_record" "web" {
 }
 
 resource "aws_acm_certificate" "domain" {
-  domain_name       = "*.domain123.com"
+  domain_name       = "*.${var.domain_name}"
   validation_method = "DNS"
 
   tags = {
@@ -287,7 +288,7 @@ resource "aws_acm_certificate" "domain" {
 }
 
 data "aws_route53_zone" "domain" {
-  name         = "domain123.com"
+  name         = var.domain_name
   private_zone = false
 }
 
