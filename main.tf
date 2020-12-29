@@ -243,15 +243,15 @@ data "aws_subnet_ids" "private" {
   ]
 }
 
-data "aws_acm_certificate" "amazon_issued" {
-  domain      = "test.domain123.com"
-  types       = ["AMAZON_ISSUED"]
-  most_recent = true
-  depends_on = [
-    aws_acm_certificate.cert
-  ]
+# data "aws_acm_certificate" "amazon_issued" {
+#   domain      = "test.domain123.com"
+#   types       = ["AMAZON_ISSUED"]
+#   most_recent = true
+#   depends_on = [
+#     aws_acm_certificate.cert
+#   ]
 
-}
+# }
 
 
 #-------------------------------------------------------------------
@@ -273,8 +273,8 @@ resource "aws_route53_record" "web" {
   }
 }
 
-resource "aws_acm_certificate" "cert" {
-  domain_name       = "test.domain123.com"
+resource "aws_acm_certificate" "domain" {
+  domain_name       = "*.domain123.com"
   validation_method = "DNS"
 
   tags = {
@@ -286,6 +286,34 @@ resource "aws_acm_certificate" "cert" {
   }
 }
 
+data "aws_route53_zone" "domain" {
+  name         = "domain123.com"
+  private_zone = false
+}
+
+resource "aws_route53_record" "cert_validation" {
+ 
+  for_each = {
+    for dvo in aws_acm_certificate.domain.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.domain.zone_id
+
+}
+
+resource "aws_acm_certificate_validation" "domain" {
+  certificate_arn         = aws_acm_certificate.domain.arn
+  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+}
 
 #6  Create ALB
 resource "aws_lb" "public_web" {
@@ -323,7 +351,7 @@ resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.public_web.arn
   port              = 443
   protocol          = "HTTPS"
-  certificate_arn = data.aws_acm_certificate.amazon_issued.arn
+  certificate_arn = aws_acm_certificate_validation.domain.certificate_arn
   # By default, return a simple 404 page
   default_action {
     type = "fixed-response"
