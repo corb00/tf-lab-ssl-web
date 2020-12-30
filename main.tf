@@ -176,16 +176,17 @@ resource "aws_launch_configuration" "as_web" {
   key_name="tf-lab"
   security_groups = [aws_security_group.web.id]
 
-  user_data = <<-EOF
-		#!/bin/bash
-    sudo apt update
-    sudo apt install -y nginx
-    sudo ufw allow 'Nginx HTTPS'
-    sudo systemctl enable nginx
-    sudo systemctl start nginx 
+  user_data = "${file("end-to-end-ssl.sh")}"
+  # user_data = <<-EOF
+	# 	#!/bin/bash
+  #   sudo apt update
+  #   sudo apt install -y nginx
+  #   sudo ufw allow 'Nginx HTTPS'
+  #   sudo systemctl enable nginx
+  #   sudo systemctl start nginx 
 
-    #echo "<h1>Deployed via Terraform OK</h1>" | sudo tee /var/www/html/index.html
-	EOF
+  #   #echo "<h1>Deployed via Terraform OK</h1>" | sudo tee /var/www/html/index.html
+	# EOF
   
   # Required when using a launch configuration with an auto scaling group. 
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html 
@@ -203,7 +204,7 @@ resource "aws_autoscaling_group" "as_web" {
   health_check_type = "ELB"
 
   min_size = 2
-  max_size = 4
+  max_size = 2
 
   tag {
     key                 = "Name"
