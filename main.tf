@@ -176,18 +176,8 @@ resource "aws_launch_configuration" "as_web" {
   key_name="tf-lab"
   security_groups = [aws_security_group.web.id]
 
-  user_data = "${file("end-to-end-ssl.sh")}"
-  # user_data = <<-EOF
-	# 	#!/bin/bash
-  #   sudo apt update
-  #   sudo apt install -y nginx
-  #   sudo ufw allow 'Nginx HTTPS'
-  #   sudo systemctl enable nginx
-  #   sudo systemctl start nginx 
-
-  #   #echo "<h1>Deployed via Terraform OK</h1>" | sudo tee /var/www/html/index.html
-	# EOF
-  
+  user_data = file("end-to-end-ssl.sh")
+    
   # Required when using a launch configuration with an auto scaling group. 
   # https://www.terraform.io/docs/providers/aws/r/launch_configuration.html 
   lifecycle {
@@ -243,17 +233,6 @@ data "aws_subnet_ids" "private" {
     aws_subnet.private1
   ]
 }
-
-# data "aws_acm_certificate" "amazon_issued" {
-#   domain      = "test.domain123.com"
-#   types       = ["AMAZON_ISSUED"]
-#   most_recent = true
-#   depends_on = [
-#     aws_acm_certificate.cert
-#   ]
-
-# }
-
 
 #-------------------------------------------------------------------
 
