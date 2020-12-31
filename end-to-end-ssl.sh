@@ -1,6 +1,6 @@
 #!/bin/bash
 #Required
-domain=test.imagelords.com
+domain=test.domain123.com
 echo "Generating certificate for $domain"
 commonname=$domain
 country=US

@@ -7,8 +7,6 @@ variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
 
-# variable "vpc_id" {}
-
 variable "subnet1_cidr" {
   type = string
   default = "10.0.1.0/24"
@@ -42,11 +40,6 @@ variable "amis" {
   }
 }
 
-# variable "web_server_port" {
-#   type = number
-#   default = 80
-# }
-
 variable "web_server_ssl_port" {
   type = number
   default = 443
@@ -55,7 +48,7 @@ variable "web_server_ssl_port" {
 variable "domain_name" {
   description = "Domain name to be used for the site"
   type        = string
-  default     = "imagelords.com"
+  default     = "domain123.com"
 }
 
 variable "alb_name" {
@@ -77,7 +70,7 @@ variable "alb_security_group_name" {
 }
 
 variable "zone_id" {
-  description = "The already existing zone ID of the target domains hosted zone"
+  description = "The existing zone ID of the target domains hosted zone"
   type        = string
   default     = "Z03882723NVM0WRQ836HN"
 }
