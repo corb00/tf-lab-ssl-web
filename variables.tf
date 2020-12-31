@@ -2,6 +2,18 @@ variable "region" {
   default = "us-west-2"
 }
 
+variable "zone_id" {
+  description = "The existing zone ID of the target domains hosted zone"
+  type        = string
+  default     = "Z03882723NVM0WRQ836HN"
+}
+
+variable "domain_name" {
+  description = "Domain name to be used for the site"
+  type        = string
+  default     = "domain123.com"
+}
+
 variable "vpc_cidr" {
   type = string
   default = "10.0.0.0/16"
@@ -45,11 +57,7 @@ variable "web_server_ssl_port" {
   default = 443
 }
 
-variable "domain_name" {
-  description = "Domain name to be used for the site"
-  type        = string
-  default     = "domain123.com"
-}
+
 
 variable "alb_name" {
   description = "The name of the ALB"
@@ -67,10 +75,4 @@ variable "alb_security_group_name" {
   description = "The name of the security group for the ALB"
   type        = string
   default     = "terraform-alb"
-}
-
-variable "zone_id" {
-  description = "The existing zone ID of the target domains hosted zone"
-  type        = string
-  default     = "Z03882723NVM0WRQ836HN"
 }
