@@ -1,7 +1,7 @@
 #!/bin/bash
 #Required
-domain=test.corbit.cc
-echo "Generating SSL for $domain"
+domain=test.imagelords.com
+echo "Generating certificate for $domain"
 commonname=$domain
 country=US
 state=NY
@@ -21,15 +21,15 @@ echo "Creating CSR"
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/$domain.key -out /etc/ssl/certs/$domain.crt \
 -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email"
 
-echo "---------------------------"
-echo "-----Below is your Certificate-----"
-echo "---------------------------"
+echo "----------------------------------"
+echo "-----Below is the Certificate-----"
+echo "----------------------------------"
 echo
 cat /etc/ssl/certs/$domain.crt
 
 echo
 echo "---------------------------"
-echo "-----Below is your Key-----"
+echo "-----Below is the Key------"
 echo "---------------------------"
 echo
 cat /etc/ssl/private/$domain.key
@@ -37,6 +37,7 @@ cat /etc/ssl/private/$domain.key
 # enable in prod::
 # openssl dhparam -out /etc/ssl/certs/dhparam.pem 2049
 
+echo "installing nginx- activating Firewall and enabling HTTPS ONLY"
 apt update
 apt install -y nginx
 ufw --force enable
@@ -62,8 +63,8 @@ server {
     ssl_stapling_verify on;
     resolver 8.8.8.8 8.8.4.4 valid=300s;
     resolver_timeout 5s;
-    # Disable preloading HSTS for now.  You can use the commented out header line that includes
-    # the "preload" directive if you understand the implications.
+    # Disabling preloading HSTS for now.  
+    # use commented out header line with the "preload" directive if desired.
     #add_header Strict-Transport-Security "max-age=63072000; includeSubdomains; preload";
     add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
     add_header X-Frame-Options DENY;

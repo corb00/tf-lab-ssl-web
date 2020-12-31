@@ -175,6 +175,9 @@ resource "aws_launch_configuration" "as_web" {
   instance_type = "t2.micro"
   key_name="tf-lab"
   security_groups = [aws_security_group.web.id]
+  root_block_device {
+    encrypted = true
+  }
 
   user_data = file("end-to-end-ssl.sh")
     
@@ -239,12 +242,9 @@ data "aws_subnet_ids" "private" {
 # create Route53 entry, create ACM ssl certificate for test.<domain_name>
 # --> validation of certificate
 
-resource "aws_route53_zone" "primary" {
-  name = var.domain_name
-}
 
 resource "aws_route53_record" "web" {
-  zone_id = aws_route53_zone.primary.zone_id
+  zone_id = var.zone_id
   name    = "test.${var.domain_name}"
   type    = "A"
   alias {
@@ -267,33 +267,23 @@ resource "aws_acm_certificate" "domain" {
   }
 }
 
-data "aws_route53_zone" "domain" {
-  name         = var.domain_name
-  private_zone = false
-}
-
 resource "aws_route53_record" "cert_validation" {
- 
-  for_each = {
-    for dvo in aws_acm_certificate.domain.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
 
+# no SANS -> only one validation record
+  count = 1
+
+  zone_id         = var.zone_id
   allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
+  name            = element(aws_acm_certificate.domain.domain_validation_options.*.resource_record_name, count.index)
+  type            = element(aws_acm_certificate.domain.domain_validation_options.*.resource_record_type, count.index)
+  records         = [element(aws_acm_certificate.domain.domain_validation_options.*.resource_record_value, count.index)]
   ttl             = 60
-  type            = each.value.type
-  zone_id         = data.aws_route53_zone.domain.zone_id
 
 }
 
 resource "aws_acm_certificate_validation" "domain" {
   certificate_arn         = aws_acm_certificate.domain.arn
-  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+  validation_record_fqdns = aws_route53_record.cert_validation.*.fqdn
 }
 
 #6  Create ALB
@@ -305,8 +295,6 @@ resource "aws_lb" "public_web" {
   subnets            = data.aws_subnet_ids.public.ids
   security_groups    = [aws_security_group.alb.id]
 }
-
-
 
 #6.1 Create http listener for alb to redirect to https
 resource "aws_lb_listener" "http" {
@@ -324,8 +312,6 @@ resource "aws_lb_listener" "http" {
     }
   }
 }
-
-
 
 #6.2 Create https Listener - add Listener rule(s)
 resource "aws_lb_listener" "https" {
@@ -379,10 +365,3 @@ resource "aws_lb_target_group" "asg" {
     unhealthy_threshold = 2
   }
 }
-
-
-#8 Outputs
-# output "server_public_ip" {
-#    value = aws_eip.public1_web1.public_ip
-# }
-

@@ -34,7 +34,6 @@ variable "subnetp2_cidr" {
   default = "10.0.5.0/24"
 }
 
-
 variable "amis" {
   type = map(string)
   default = {
@@ -53,13 +52,11 @@ variable "web_server_ssl_port" {
   default = 443
 }
 
-
 variable "domain_name" {
-  description = "Domain name to be used for the website"
+  description = "Domain name to be used for the site"
   type        = string
-  default     = "corbit.cc"
+  default     = "imagelords.com"
 }
-
 
 variable "alb_name" {
   description = "The name of the ALB"
@@ -77,4 +74,10 @@ variable "alb_security_group_name" {
   description = "The name of the security group for the ALB"
   type        = string
   default     = "terraform-alb"
+}
+
+variable "zone_id" {
+  description = "The already existing zone ID of the target domains hosted zone"
+  type        = string
+  default     = "Z03882723NVM0WRQ836HN"
 }

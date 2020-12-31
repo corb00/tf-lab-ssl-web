@@ -1,0 +1,42 @@
+{
+  "version": 4,
+  "terraform_version": "0.14.2",
+  "serial": 95,
+  "lineage": "67319652-f266-7dca-ad2b-9562528726ea",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "managed",
+      "type": "aws_route53_zone",
+      "name": "domain",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "comment": "",
+            "delegation_set_id": "",
+            "force_destroy": null,
+            "id": "Z03882723NVM0WRQ836HN",
+            "name": "imagelords.com.",
+            "name_servers": [
+              "ns-1067.awsdns-05.org",
+              "ns-1708.awsdns-21.co.uk",
+              "ns-481.awsdns-60.com",
+              "ns-715.awsdns-25.net"
+            ],
+            "tags": {
+              "env": "prod"
+            },
+            "vpc": [],
+            "vpc_id": null,
+            "vpc_region": null,
+            "zone_id": "Z03882723NVM0WRQ836HN"
+          },
+          "sensitive_attributes": [],
+          "private": "eyJzY2hlbWFfdmVyc2lvbiI6IjAifQ=="
+        }
+      ]
+    }
+  ]
+}
