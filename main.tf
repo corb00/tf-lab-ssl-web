@@ -127,19 +127,25 @@ resource "aws_security_group" "web" {
     from_port   = var.web_server_ssl_port
     to_port     = var.web_server_ssl_port
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+    security_groups = [aws_security_group.alb.id]
+    }
   
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
+    #security_groups = [aws_security_group.alb.id]
     cidr_blocks = ["0.0.0.0/0"]
-  }
+    }
 
   tags = {
     Name = "ssl_web"
   }
+
+  depends_on = [
+    aws_security_group.alb
+  ]
+
 }
 
 resource "aws_security_group" "alb" {
@@ -147,12 +153,13 @@ resource "aws_security_group" "alb" {
   vpc_id      = aws_vpc.prod.id
    
   # Allow inbound HTTP requests -> redirected by listener on ALB to use SSL
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+#  ingress {
+#    from_port   = 80
+#    to_port     = 80
+#    protocol    = "tcp"
+#    cidr_blocks = ["0.0.0.0/0"]
+#  }
+
 # Allow inbound HTTPS requests
   ingress {
     from_port   = 443
