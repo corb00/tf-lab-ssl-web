@@ -11,7 +11,7 @@ variable "zone_id" {
 variable "domain_name" {
   description = "Domain name to be used for the site"
   type        = string
-  default     = "domain123.com"
+  default     = "imagelords.com"
 }
 
 variable "vpc_cidr" {
